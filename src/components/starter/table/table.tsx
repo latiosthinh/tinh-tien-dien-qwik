@@ -41,9 +41,12 @@ export default component$(() => {
   const store = useStore({ numUsed: [0,0,0,0,0,0], total: 0 });
   const handleInputChange = $((e: Event, el: HTMLInputElement) => {
     if (!el.value) {
+      store.total = 0
       store.numUsed = [0,0,0,0,0,0]
       return
     }
+
+    store.total = 0
 
     let num = parseFloat(el.value)
     store.numUsed = [0,0,0,0,0,0]
@@ -89,11 +92,10 @@ export default component$(() => {
             <tr key={d.BTHANG_ID}>
               <td class="py-2">{index+1}</td>
               <td class="py-2">{d.DON_GIA}</td>
-              <td class="py-2">{d.DINH_MUC}</td>
+              <td class="py-2">{d.DINH_MUC > 0 ? d.DINH_MUC : store.numUsed[index] / d.DON_GIA}</td>
               <td class="py-2">{store.numUsed[index]}</td>
             </tr>
           )}
-          <tr></tr>
         </tbody>
       </table>
     </>
