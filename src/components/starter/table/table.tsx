@@ -1,18 +1,19 @@
 import { component$, useSignal, $, useTask$, useStore } from '@builder.io/qwik';
+import GiaNuoc from './getDMucNuoc.json'
 
 export interface IData {
   BTHANG_ID: number,
-  DIEN_GIAI: string,
   DINH_MUC: number,
   DON_GIA: number,
   GIANHOMNN_ID: number,
-  MA_NGIA: string,
   MA_NHOMNN: string,
-  MA_NN: string,
-  MO_TA: string,
-  NGAY_HHLUC: string,
   NGAY_HLUC: string,
-  STT_BTHANG: number
+  // DIEN_GIAI: string,
+  // MA_NGIA: string,
+  // MA_NN: string,
+  // MO_TA: string,
+  // NGAY_HHLUC: string,
+  // STT_BTHANG: number
 }
 
 export const filterCondition = {
@@ -22,12 +23,13 @@ export const filterCondition = {
 }
 
 export default component$(() => {
-  const url = useSignal('https://calc.evn.com.vn/TinhHoaDon/api/getDMuc');
+  const store = useStore({ type: 'kWh', numUsed: [0,0,0,0,0,0], total: 0 });
+  const signal = useSignal('https://calc.evn.com.vn/TinhHoaDon/api/getDMuc');
   const responseJson = useSignal<IData[]>([]);
 
   useTask$(async ({ track }) => {
-    track(() => url.value);
-    const res = await fetch(url.value);
+    track(() => signal.value);
+    const res = await fetch(signal.value);
     const json = await res.json();
     const dienBacThangData = [...json.Data.D_BAC_THANG]
     const filteredData = dienBacThangData.filter((d: IData) => 
@@ -38,7 +40,6 @@ export default component$(() => {
     responseJson.value = filteredData;
   });
 
-  const store = useStore({ numUsed: [0,0,0,0,0,0], total: 0 });
   const handleInputChange = $((e: Event, el: HTMLInputElement) => {
     if (!el.value) {
       store.total = 0
@@ -50,10 +51,12 @@ export default component$(() => {
 
     let num = parseFloat(el.value)
     store.numUsed = [0,0,0,0,0,0]
-    responseJson.value && responseJson.value.map((d: IData, index: number) => {
+    const datas = store.type === 'kWh' ? responseJson.value : GiaNuoc
+    datas && datas.map((d: IData, index: number) => {
       if (!d || num < 1) return
 
-      if (index >= store.numUsed.length - 1) {
+      if (index >= datas.length - 1) {
+        console.log(index)
         store.numUsed[index] = num * d.DON_GIA
         store.total += store.numUsed[index]
         return
@@ -71,33 +74,57 @@ export default component$(() => {
     })
   })
 
-  return (
-    <>
-      <label class="cursor-pointer flex flex-wrap gap-4 md:justify-center items-center mb-10">
-        <div class="text-xl"><span class="text-red-600 font-bold">*</span> Điền vào số điện sử dụng:</div>
-        <input class="h-10 px-3 text-black border-2 border-black" type="text"
-          onInput$={handleInputChange} />
-      </label>
-      <h3 class="text-xl font-bold md:text-center mb-10">Tổng cộng: <span class="text-red-600">{store.total}</span> VNĐ</h3>
+  const changeType = $((type: string) => {
+    store.type = type
+  })
 
-      <table class="w-full">
-        <thead>
-          <th class="py-2">Bậc thang</th>
-          <th class="py-2">Đơn giá (VNĐ/kWh)</th>
-          <th class="py-2">Định mức (kWh)</th>
-          <th class="py-2">Thành tiền (VNĐ)</th>
-        </thead>
-        <tbody class="text-center">
-          {responseJson.value && responseJson.value.map((d: IData, index: number) => d &&
-            <tr key={d.BTHANG_ID}>
-              <td class="py-2">{index+1}</td>
-              <td class="py-2">{d.DON_GIA}</td>
-              <td class="py-2">{d.DINH_MUC > 0 ? d.DINH_MUC : store.numUsed[index] / d.DON_GIA}</td>
-              <td class="py-2">{store.numUsed[index]}</td>
-            </tr>
-          )}
-        </tbody>
-      </table>
-    </>
+  return (
+      <>
+        <div class="flex items-center justify-center mb-10 gap-10">
+          <button class={`text-white font-bold py-2 px-4 rounded ${store.type === 'kWh' ? 'bg-blue-600' : 'bg-blue-300'}`} onClick$={() => changeType('kWh')}>Điện</button>
+          <button class={`text-white font-bold py-2 px-4 rounded ${store.type === 'm3' ? 'bg-blue-600' : 'bg-blue-300'}`} onClick$={() => changeType('m3')}>Nước</button>
+        </div>
+
+        <label class="cursor-pointer flex flex-wrap gap-4 md:justify-center items-center mb-10">
+          <div class="text-xl"><span class="text-red-600 font-bold">*</span> Điền vào số sử dụng:</div>
+          <input class="h-10 px-3 text-black border-2 border-black" type="text"
+            onInput$={handleInputChange} />
+        </label>
+        <h3 class="text-xl font-bold md:text-center mb-10">
+          Tổng cộng: {store.total}
+          {
+            store.type === 'kWh' && 
+            <><br/>(VAT 10% = <span class="text-red-600">{(store.total * 1.1).toFixed(0)} VNĐ)</span></>
+          }
+        </h3>
+
+        <table class="w-full">
+          <thead class="text-white text-sm bg-gray-400">
+            <th class="py-2">Bậc thang</th>
+            <th class="py-2">Đơn giá (VNĐ/{store.type})</th>
+            <th class="py-2">Định mức ({store.type})</th>
+            <th class="py-2">Thành tiền (VNĐ)</th>
+          </thead>
+          <tbody class="text-center">
+            {store.type === 'kWh' && responseJson.value.map((d: IData, index: number) => d &&
+              <tr key={d.BTHANG_ID} class="border-b border-gray-200">
+                <td class="py-2">{index+1}</td>
+                <td class="py-2">{d.DON_GIA}</td>
+                <td class="py-2">{d.DINH_MUC > 0 ? d.DINH_MUC : store.numUsed[index] / d.DON_GIA}</td>
+                <td class="py-2">{store.numUsed[index].toFixed(1)}</td>
+              </tr>
+            )}
+
+            {store.type === 'm3' && GiaNuoc.map((d: IData, index: number) => d &&
+              <tr key={d.BTHANG_ID} class="border-b border-gray-200">
+                <td class="py-2">{index+1}</td>
+                <td class="py-2">{d.DON_GIA}</td>
+                <td class="py-2">{d.DINH_MUC > 0 ? d.DINH_MUC : store.numUsed[index] / d.DON_GIA}</td>
+                <td class="py-2">{store.numUsed[index].toFixed(1)}</td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </>
   );
 });

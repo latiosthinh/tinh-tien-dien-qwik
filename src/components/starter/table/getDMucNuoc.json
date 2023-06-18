@@ -1,0 +1,34 @@
+[
+	{
+		"BTHANG_ID": 1000,
+		"DINH_MUC": 10,
+		"DON_GIA": 6869,
+		"GIANHOMNN_ID": 4707,
+		"MA_NHOMNN": "SHBT",
+		"NGAY_HLUC": "2023"
+	},
+	{
+		"BTHANG_ID": 1001,
+		"DINH_MUC": 10,
+		"DON_GIA": 8110,
+		"GIANHOMNN_ID": 4707,
+		"MA_NHOMNN": "SHBT",
+		"NGAY_HLUC": "2023"
+	},
+	{
+		"BTHANG_ID": 1002,
+		"DINH_MUC": 10,
+		"DON_GIA": 9969,
+		"GIANHOMNN_ID": 4707,
+		"MA_NHOMNN": "SHBT",
+		"NGAY_HLUC": "2023"
+	},
+	{
+		"BTHANG_ID": 1003,
+		"DINH_MUC": 0,
+		"DON_GIA": 18318,
+		"GIANHOMNN_ID": 4707,
+		"MA_NHOMNN": "SHBT",
+		"NGAY_HLUC": "2023"
+	}
+]
