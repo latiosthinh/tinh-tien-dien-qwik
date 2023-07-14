@@ -94,7 +94,7 @@ export default component$(() => {
           Tổng cộng: {store.total}
           {
             store.type === 'kWh' && 
-            <><br/>(VAT 10% = <span class="text-red-600">{(store.total * 1.1).toFixed(0)} VNĐ)</span></>
+            <><br/>(VAT 8% = <span class="text-red-600">{(store.total * 1.08).toFixed(0)} VNĐ)</span></>
           }
         </h3>
 
